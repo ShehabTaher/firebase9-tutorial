@@ -20,7 +20,8 @@ import {
     getAuth,
     createUserWithEmailAndPassword,
     signOut,
-    signInWithEmailAndPassword
+    signInWithEmailAndPassword,
+    onAuthStateChanged
 }
     from 'firebase/auth'
 
@@ -100,7 +101,7 @@ addBookForm.addEventListener('submit', (e) => {
     addDoc(colRef, {
         title: addBookForm.title.value,
         author: addBookForm.author.value,
-        // Ceate At in Time
+        // Create At in Time
         createdAt: serverTimestamp()
     })
         .then(() => {
@@ -166,24 +167,8 @@ signupForm.addEventListener("submit", (e) => {
 
     createUserWithEmailAndPassword(auth, email, password)
         .then((cred) => {
-            console.log("user created:", cred.user);
+            // console.log("user created:", cred.user);
             signupForm.reset()
-        })
-        .catch((err) => {
-            console.log(err.message);
-        })
-})
-
-// Login USer
-const loginForm = document.querySelector('.login')
-loginForm.addEventListener("submit", (e) => {
-    e.preventDefault()
-    const email = loginForm.email.value
-    const password = loginForm.password.value
-
-    signInWithEmailAndPassword(auth, email, password)
-        .then((cred) => {
-            console.log("user logged in:", cred.user);
         })
         .catch((err) => {
             console.log(err.message);
@@ -192,13 +177,56 @@ loginForm.addEventListener("submit", (e) => {
 
 // Logout User
 const logoutButton = document.querySelector('.logout')
-logoutButton.addEventListener("click ", () => {
+logoutButton.addEventListener("click", () => {
     signOut(auth)
         .then(() => {
-            console.log("User signed out");
+            // console.log('logged out');
+        }).catch((err) => {
+            console.log(err.message);
+        })
+})
+
+// Login User
+const loginForm = document.querySelector('.login')
+loginForm.addEventListener("submit", (e) => {
+    e.preventDefault()
+    const email = loginForm.email.value
+    const password = loginForm.password.value
+
+    signInWithEmailAndPassword(auth, email, password)
+        .then((cred) => {
+            // console.log("user logged in:", cred.user);
         })
         .catch((err) => {
             console.log(err.message);
         })
+})
 
+// Subscribing to Auth change
+onAuthStateChanged(auth, (user) => {
+    console.log(' user state changed', user);
+})
+
+
+// Unsubscribing from  changes (DB & Auth)
+const unsubButton = document.querySelector('.unsubcribing')
+unsubButton.addEventListener('click', () => {
+    console.log('unsubscribing');
+    unsubCol()
+    unsubDoc()
+    unsubAuth()
+
+})
+const unsubCol = onSnapshot(q, (snapshot) => {
+    let books = []
+    snapshot.docs.forEach((doc) => {
+        books.push({ ...doc.data(), id: doc.id })
+    })
+    console.log(books);
+})
+const unsubDoc = onSnapshot(docRef, (doc) => {
+    console.log(`${doc.data().title} by ${doc.data().author}`)
+})
+const unsubAuth = onAuthStateChanged(auth, (user) => {
+    console.log(' user state changed', user);
 })
